@@ -50,3 +50,5 @@ macos/*
 linux/*
 web/*
 
+# FVM Version Cache
+.fvm/
