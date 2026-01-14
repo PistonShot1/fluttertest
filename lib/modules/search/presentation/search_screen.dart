@@ -119,32 +119,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return AppBar(
       backgroundColor: context.backgroundColor,
       elevation: 0,
-      leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios,
-          color: context.onBackgroundColor,
-          size: 20,
-        ),
-        onPressed: () => Navigator.of(context).maybePop(),
-      ),
-      title: Text(
-        "Shop Products",
-        style: TextStyle(
-          color: context.onBackgroundColor,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      centerTitle: false,
-      actions: [
-        IconButton(
-          icon: Icon(
-            Icons.shopping_cart_outlined,
-            color: context.onBackgroundColor,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.shopping_cart_outlined),
+          SizedBox(width: 10),
+          Text(
+            "Shop Products",
+            style: TextStyle(
+              color: context.onBackgroundColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          onPressed: () {},
-        ),
-      ],
+        ],
+      ),
     );
   }
 
