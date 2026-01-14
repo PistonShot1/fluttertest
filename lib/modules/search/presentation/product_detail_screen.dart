@@ -138,8 +138,8 @@ class ProductDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       if (product.rating != null)
                         _buildRatingRow(context, product.rating!),
-                      const SizedBox(height: 20),
-                      _buildActionButtons(context),
+                      // const SizedBox(height: 20),
+                      // _buildActionButtons(context),
                       const SizedBox(height: 24),
                       Text(
                         product.description ?? '',
