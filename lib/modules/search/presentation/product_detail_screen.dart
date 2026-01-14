@@ -72,13 +72,6 @@ class ProductDetailScreen extends ConsumerWidget {
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.favorite_border),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surface.withValues(alpha: .8),
-              ),
-            ),
-            IconButton(
-              onPressed: () {},
               icon: const Icon(Icons.share),
               style: IconButton.styleFrom(
                 backgroundColor: colorScheme.surface.withValues(alpha: .8),
