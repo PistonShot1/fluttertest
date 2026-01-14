@@ -11,7 +11,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int selectedIndex = 0;
+  int selectedIndex = 1;
   late final PageController pageController;
 
   @override
@@ -50,7 +50,7 @@ class _MainScreenState extends State<MainScreen> {
         },
         children: const [HomeScreen(), SearchScreen(), ProfileScreen()],
       ),
-      bottomNavigationBar: buildNavBar(),
+      // bottomNavigationBar: buildNavBar(),
     );
   }
 
