@@ -4,7 +4,7 @@ part 'product.freezed.dart';
 part 'product.g.dart';
 
 @freezed
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Product with _$Product {
   const Product({
     required this.id,
@@ -51,7 +51,7 @@ class Product with _$Product {
 }
 
 @freezed
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Rating with _$Rating {
   const Rating({required this.rate, required this.count});
 

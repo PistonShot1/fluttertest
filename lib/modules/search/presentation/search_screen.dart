@@ -1,11 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertest/core/router/route_constant.dart';
+import 'package:fluttertest/core/router/router.dart';
 import 'package:fluttertest/core/shared/components/default_network_image.dart';
 import 'package:fluttertest/core/shared/theme/color/app_color.dart';
 import 'package:fluttertest/modules/search/data/entities/model/category_item.dart';
 import 'package:fluttertest/modules/search/data/entities/model/product.dart';
 import 'package:fluttertest/modules/search/riverpod/product_list_notifier.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -434,104 +437,109 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildProductCard(Product product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.outlineVariantColor, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: context.onSurfaceColor.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Image Section with Badge and Favorite
-          Flexible(
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.surfaceContainerColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+    return GestureDetector(
+      onTap: () {
+        context.push(RouteConstant.productDetail, extra: product.toJson());
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: context.surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.outlineVariantColor, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: context.onSurfaceColor.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Image Section with Badge and Favorite
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.surfaceContainerColor,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                 ),
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: AspectRatio(
-                  aspectRatio: 5 / 3,
-                  child: DefaultNetworkImage(
-                    pathURL: product.image ?? 'N/A',
-                    fit: BoxFit.contain,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: 5 / 3,
+                    child: DefaultNetworkImage(
+                      pathURL: product.image ?? 'N/A',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Product Info Section
-          Flexible(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Product Name
-                  Text(
-                    product.title ?? 'N/A',
-                    style: TextStyle(
-                      color: context.onSurfaceColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-
-                  // Rating Row
-                  Row(
-                    children: [
-                      _buildRatingStars(product.rating?.rate ?? 0),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product.rating?.rate}',
-                        style: TextStyle(
-                          color: context.steelDark,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
+            // Product Info Section
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Name
+                    Text(
+                      product.title ?? 'N/A',
+                      style: TextStyle(
+                        color: context.onSurfaceColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
-                      Text(
-                        ' (${product.rating?.count})',
-                        style: TextStyle(
-                          color: context.steelMedium,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Price
-                  Text(
-                    '\$${product.price?.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      color: context.zetrixRed600,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+
+                    // Rating Row
+                    Row(
+                      children: [
+                        _buildRatingStars(product.rating?.rate ?? 0),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${product.rating?.rate}',
+                          style: TextStyle(
+                            color: context.steelDark,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          ' (${product.rating?.count})',
+                          style: TextStyle(
+                            color: context.steelMedium,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Price
+                    Text(
+                      '\$${product.price?.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: context.zetrixRed600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
