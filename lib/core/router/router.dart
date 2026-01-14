@@ -29,11 +29,11 @@ final GoRouter router = GoRouter(
       name: RouteConstant.productDetail,
       builder: (context, state) {
         try {
-          final product = state.extra as Product;
-          return ProductDetailScreen(product: product);
+          final product = state.extra as Map<String, dynamic>;
+          return ProductDetailScreen(product: Product.fromJson(product));
         } catch (e) {
           throw UnimplementedError(
-            'Product detail screen not implemented correctly. Error: $e',
+            'Routing to product detail screen not implemented correctly. Error: $e',
           );
         }
       },

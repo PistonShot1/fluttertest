@@ -8,6 +8,7 @@ import 'package:fluttertest/core/shared/theme/color/app_color.dart';
 import 'package:fluttertest/modules/search/data/entities/model/category_item.dart';
 import 'package:fluttertest/modules/search/data/entities/model/product.dart';
 import 'package:fluttertest/modules/search/riverpod/product_list_notifier.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -438,7 +439,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildProductCard(Product product) {
     return GestureDetector(
       onTap: () {
-        router.push(RouteConstant.productDetail, extra: product);
+        context.push(RouteConstant.productDetail, extra: product.toJson());
       },
       child: Container(
         decoration: BoxDecoration(
