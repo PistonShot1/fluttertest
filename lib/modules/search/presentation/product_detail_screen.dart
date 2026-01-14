@@ -70,13 +70,16 @@ class ProductDetailScreen extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.share),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surface.withValues(alpha: .8),
-              ),
-            ),
+            // TODO  : Implement share functionality ( need to play with deeplink)
+            // IconButton(
+            //   onPressed: () {
+            //
+            //   },
+            //   icon: const Icon(Icons.share),
+            //   style: IconButton.styleFrom(
+            //     backgroundColor: colorScheme.surface.withValues(alpha: .8),
+            //   ),
+            // ),
           ],
         ),
       ),
