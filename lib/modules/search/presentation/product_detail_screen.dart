@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertest/core/shared/components/default_network_image.dart';
+import 'package:fluttertest/modules/cart/riverpod/cart_notifier.dart';
 import 'package:fluttertest/modules/search/data/entities/model/product.dart';
 
-class ProductDetailScreen extends ConsumerWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   final Product product;
-  const ProductDetailScreen({super.key, required this.product});
+  final int initialCartItemCount;
+  const ProductDetailScreen({
+    super.key,
+    required this.product,
+    required this.initialCartItemCount,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  late int cartItemCount;
+
+  @override
+  void initState() {
+    super.initState();
+    cartItemCount = widget.initialCartItemCount;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size(double.infinity, kToolbarHeight),
@@ -17,7 +37,7 @@ class ProductDetailScreen extends ConsumerWidget {
       body: Stack(
         children: [
           Positioned.fill(child: _buildProductImage(context)),
-          _buildDetailsSheet(context),
+          _buildDetailsSheet(context, ref),
         ],
       ),
     );
@@ -30,8 +50,11 @@ class ProductDetailScreen extends ConsumerWidget {
       child: InteractiveViewer(
         minScale: 1.0,
         maxScale: 4.0,
-        child: product.image != null
-            ? DefaultNetworkImage(pathURL: product.image!, fit: BoxFit.contain)
+        child: widget.product.image != null
+            ? DefaultNetworkImage(
+                pathURL: widget.product.image!,
+                fit: BoxFit.contain,
+              )
             : Center(
                 child: Icon(
                   Icons.image_outlined,
@@ -62,7 +85,7 @@ class ProductDetailScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                product.title ?? '',
+                widget.product.title ?? '',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -86,7 +109,7 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailsSheet(BuildContext context) {
+  Widget _buildDetailsSheet(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -118,9 +141,9 @@ class ProductDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (product.category != null)
+                      if (widget.product.category != null)
                         Text(
-                          product.category!.toUpperCase(),
+                          widget.product.category!.toUpperCase(),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w600,
@@ -129,20 +152,20 @@ class ProductDetailScreen extends ConsumerWidget {
                         ),
                       const SizedBox(height: 8),
                       Text(
-                        product.title ?? '',
+                        widget.product.title ?? '',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           height: 1.3,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (product.rating != null)
-                        _buildRatingRow(context, product.rating!),
-                      // const SizedBox(height: 20),
-                      // _buildActionButtons(context),
+                      if (widget.product.rating != null)
+                        _buildRatingRow(context, widget.product.rating!),
+                      const SizedBox(height: 20),
+                      _buildActionButtons(context, ref),
                       const SizedBox(height: 24),
                       Text(
-                        product.description ?? '',
+                        widget.product.description ?? '',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                           height: 1.6,
@@ -201,39 +224,96 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
 
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.shopping_cart_outlined),
-            padding: const EdgeInsets.all(12),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.shopping_bag_outlined, size: 20),
-            label: Text(
-              'Buy Now${product.price != null ? ' • \$${product.price!.toStringAsFixed(2)}' : ''}',
-            ),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: () {},
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 20,
+                      color: colorScheme.onPrimary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Add to Cart',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+          // Minus button
+          IconButton(
+            onPressed: () => _minusHandler(widget.product),
+            icon: const Icon(Icons.remove),
+            padding: const EdgeInsets.all(12),
+          ),
+          // Quantity display
+          Container(
+            width: 60,
+            alignment: Alignment.center,
+            child: Text(
+              cartItemCount.toString(),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          // Plus button
+          IconButton(
+            onPressed: () => _addHandler(widget.product),
+            icon: const Icon(Icons.add),
+            padding: const EdgeInsets.all(12),
+          ),
+        ],
+      ),
     );
+  }
+
+  void _addHandler(Product product) {
+    setState(() {
+      cartItemCount++;
+    });
+    ref.read(cartProvider.notifier).incrementCartItem(product, cartItemCount);
+    ref.invalidate(cartProvider);
+  }
+
+  void _minusHandler(Product product) {
+    setState(() {
+      if (cartItemCount > 0) {
+        cartItemCount--;
+      }
+    });
+    ref.read(cartProvider.notifier).decreaseCartItem(product, cartItemCount);
+    ref.invalidate(cartProvider);
   }
 }

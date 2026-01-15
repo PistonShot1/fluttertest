@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:fluttertest/core/router/route_constant.dart';
 import 'package:fluttertest/core/router/router.dart';
 import 'package:fluttertest/core/shared/components/default_network_image.dart';
 import 'package:fluttertest/core/shared/theme/color/app_color.dart';
+import 'package:fluttertest/modules/cart/riverpod/cart_notifier.dart';
 import 'package:fluttertest/modules/search/data/entities/model/category_item.dart';
 import 'package:fluttertest/modules/search/data/entities/model/product.dart';
 import 'package:fluttertest/modules/search/riverpod/product_list_notifier.dart';
@@ -20,8 +23,7 @@ class SearchScreen extends ConsumerStatefulWidget {
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
-  int _cartItemCount = 3;
-
+  bool _fetchingCartItemCount = false;
   final List<String> _filters = [
     'Filter',
     'In stock',
@@ -53,20 +55,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
   }
 
-  void _addToCart(Product product) {
-    setState(() {
-      _cartItemCount++;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.title} added to cart'),
-        backgroundColor: context.zetrixRed600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+  // void _addToCart(Product product) {
+  //   setState(() {
+  //     _cartItemCount++;
+  //   });
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text('${product.title} added to cart'),
+  //       backgroundColor: context.zetrixRed600,
+  //       behavior: SnackBarBehavior.floating,
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  //       duration: const Duration(seconds: 2),
+  //     ),
+  //   );
+  // }
 
   @override
   void dispose() {
@@ -79,42 +81,60 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Scaffold(
       backgroundColor: context.backgroundColor,
       appBar: _buildAppBar(),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(productListProvider);
-              },
-              child: CustomScrollView(
-                slivers: [
-                  // Search Bar
-                  // SliverToBoxAdapter(child: _buildSearchBar()),
-
-                  // Filter Chips
-                  // SliverToBoxAdapter(child: _buildFilterChips()),
-
-                  // Categories
-                  // SliverToBoxAdapter(child: _buildCategories()),
-
-                  // Results Count
-                  SliverToBoxAdapter(child: _buildResultsCount()),
-
-                  // Products Grid
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: _buildProductsGrid(),
+          _fetchingCartItemCount
+              ? Positioned.fill(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      color: context.onBackgroundColor.withValues(alpha: 0.5),
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      ),
+                    ),
                   ),
+                )
+              : SizedBox.shrink(),
+          Column(
+            children: [
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(productListProvider);
+                  },
+                  child: CustomScrollView(
+                    slivers: [
+                      // Search Bar
+                      // SliverToBoxAdapter(child: _buildSearchBar()),
 
-                  // Bottom spacing for the cart bar
-                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                ],
+                      // Filter Chips
+                      // SliverToBoxAdapter(child: _buildFilterChips()),
+
+                      // Categories
+                      // SliverToBoxAdapter(child: _buildCategories()),
+
+                      // Results Count
+                      SliverToBoxAdapter(child: _buildResultsCount()),
+
+                      // Products Grid
+                      SliverPadding(
+                        padding: const EdgeInsets.all(16),
+                        sliver: _buildProductsGrid(),
+                      ),
+
+                      // Bottom spacing for the cart bar
+                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
-      // bottomNavigationBar: _buildCartBar(),
+      bottomNavigationBar: _buildCartBar(),
     );
   }
 
@@ -438,9 +458,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildProductCard(Product product) {
     return GestureDetector(
-      onTap: () {
-        context.push(RouteConstant.productDetail, extra: product.toJson());
-      },
+      onTap: _fetchingCartItemCount
+          ? null
+          : () async {
+              final cartItemCount = await ref
+                  .read(cartProvider.notifier)
+                  .getCartItemCountByProductId(product.id ?? 0);
+              debugPrint('cartItemCount: $cartItemCount');
+              if (!mounted) return;
+              context.push(
+                RouteConstant.productDetail,
+                extra: {
+                  'product': product.toJson(),
+                  'cartItemCount': cartItemCount,
+                },
+              );
+            },
       child: Container(
         decoration: BoxDecoration(
           color: context.surfaceColor,
@@ -564,6 +597,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildCartBar() {
+    final cartState = ref.watch(cartProvider);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -595,7 +629,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$_cartItemCount items',
+                    '${cartState.value?.totalItems ?? 0} items',
                     style: TextStyle(
                       color: context.onSurfaceColor,
                       fontSize: 18,
@@ -610,6 +644,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ElevatedButton(
               onPressed: () {
                 // Navigate to cart
+                context.push(RouteConstant.cart);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: context.zetrixRed600,
