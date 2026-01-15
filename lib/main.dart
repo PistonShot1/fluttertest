@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertest/core/router/router.dart';
 import 'package:fluttertest/core/shared/components/app_snack_bar.dart';
 import 'package:fluttertest/core/shared/theme/app_theme.dart';
+import 'package:fluttertest/core/utils/injection_container/injection_container.dart'
+    as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +16,9 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
   await dotenv.load(fileName: 'assets/.env');
+
+  await di.init();
+
   runApp(ProviderScope(child: const MyApp()));
 }
 
