@@ -4,8 +4,8 @@ A modern Flutter e-commerce application featuring product search, shopping cart,
 
 ## Pending Features and Chores (in progress)
 
-- [x] Product Search & Category Filtering
-- [x] Unit Tests and Integration Tests (only partial completed)
+- [ ] Product Search & Category Filtering
+- [ ] Unit Tests and Integration Tests (only partial completed)
 
 ## Features
 
