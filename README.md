@@ -2,6 +2,17 @@
 
 A modern Flutter e-commerce application featuring product search, shopping cart, and product details. Built with clean architecture principles and state-of-the-art Flutter packages.
 
+## Note For Reviewer :
+
+(refer this section for the change logs by the required instruction and task)
+(the instruction are referred from here : [MYEG_Flutter Developer.txt](./MYEG_Flutter%20Developer.txt))
+
+- To test for review refer to branch tags (v1.0.0 + 1, v1.0.1,....)
+- The requested pull request to be created already merged , you may refer to the closed PRs in this repository.
+- v1.0.0 : Covers instructions from 1-7
+- v1.0.1 : Covers additional instruction 1 & 2
+- v1.0.2 : (in development)
+
 ## Pending Features and Chores (in progress)
 
 - [ ] Product Search & Category Filtering

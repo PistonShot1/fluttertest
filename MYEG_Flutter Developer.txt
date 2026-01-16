@@ -1,0 +1,24 @@
+Flutter Test
+
+[Before Start]
+1. Please ensure you have a GitHub account. If no, please register one here https://github.com/.
+
+[Test]
+1. Initialize a new repository for the test, you may name it as flutter-test.
+2. Create a feature branch call product-list.
+3. In this product-list branch, do the following:
+	a. get product list from https://github.com/keikaavousi/fake-store-api?tab=readme-ov-file
+	b. display the list in UI with name, price and rating
+4. Push the changes and create a Pull Request (PR) for this.
+5. Create another feature branch call product-details.
+6. In this product-details branch, do the following:
+	a. The product list is clickable and will redirect to the product details page.
+	a. A proper UI layout of the product details page showing the product name, description, price, image and rating.
+	b. Allow the image to be zoomable.
+7. Push the changes and create a PR for this.
+
+
+[Additional Points]
+1. The product is able to be add into cart. After adding the item into cart, once I close the app and reopen, it should still be inside the cart. I should also able to remove it from the cart.
+2. I am able to search the products.
+3. I am able to filter by category.
