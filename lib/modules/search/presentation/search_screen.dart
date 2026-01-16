@@ -8,9 +8,11 @@ import 'package:fluttertest/core/router/router.dart';
 import 'package:fluttertest/core/shared/components/default_network_image.dart';
 import 'package:fluttertest/core/shared/theme/color/app_color.dart';
 import 'package:fluttertest/modules/cart/riverpod/cart_notifier.dart';
+import 'package:fluttertest/modules/search/components/product_search_bar.dart';
 import 'package:fluttertest/modules/search/data/entities/model/category_item.dart';
 import 'package:fluttertest/modules/search/data/entities/model/product.dart';
 import 'package:fluttertest/modules/search/riverpod/product_list_notifier.dart';
+import 'package:fluttertest/modules/search/riverpod/search_state_notifier.dart';
 import 'package:go_router/go_router.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -21,18 +23,10 @@ class SearchScreen extends ConsumerStatefulWidget {
 }
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final SearchController _searchController = SearchController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _selectedCategory = 'All';
   bool _fetchingCartItemCount = false;
-  final List<String> _filters = [
-    'Filter',
-    'In stock',
-    'Fast delivery',
-    'Top rated',
-    'On sale',
-  ];
-
-  int _selectedFilterIndex = -1;
   String _searchQuery = '';
 
   @override
@@ -40,44 +34,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.initState();
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case "men's clothing":
-        return Icons.male;
-      case "women's clothing":
-        return Icons.female;
-      case 'jewelery':
-        return Icons.diamond;
-      case 'electronics':
-        return Icons.devices;
-      default:
-        return Icons.category;
-    }
-  }
-
-  // void _addToCart(Product product) {
-  //   setState(() {
-  //     _cartItemCount++;
-  //   });
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //       content: Text('${product.title} added to cart'),
-  //       backgroundColor: context.zetrixRed600,
-  //       behavior: SnackBarBehavior.floating,
-  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-  //       duration: const Duration(seconds: 2),
-  //     ),
-  //   );
-  // }
-
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final productsRef = ref.watch(productListProvider);
     return Scaffold(
       backgroundColor: context.backgroundColor,
       appBar: _buildAppBar(),
@@ -104,29 +70,47 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   onRefresh: () async {
                     ref.invalidate(productListProvider);
                   },
-                  child: CustomScrollView(
-                    slivers: [
-                      // Search Bar
-                      // SliverToBoxAdapter(child: _buildSearchBar()),
+                  child: NestedScrollView(
+                    headerSliverBuilder: (context, innerBoxIsScrolled) {
+                      return [
+                        SliverAppBar(
+                          pinned: true,
+                          forceElevated: innerBoxIsScrolled,
+                          automaticallyImplyLeading: false,
+                          flexibleSpace: SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // _buildSearchBar(productsRef.value),
+                                ProductSearchBar(
+                                  products: productsRef.value,
+                                  onLoadingChanged: (isLoading) {
+                                    setState(() {
+                                      _fetchingCartItemCount = isLoading;
+                                    });
+                                  },
+                                ),
+                                _buildCategories(),
+                              ],
+                            ),
+                          ),
+                          expandedHeight: _calculateHeaderHeight(context),
+                          collapsedHeight: _calculateHeaderHeight(context),
+                        ),
+                      ];
+                    },
+                    body: CustomScrollView(
+                      slivers: [
+                        // Results Count
+                        SliverToBoxAdapter(child: _buildResultsCount()),
 
-                      // Filter Chips
-                      // SliverToBoxAdapter(child: _buildFilterChips()),
-
-                      // Categories
-                      // SliverToBoxAdapter(child: _buildCategories()),
-
-                      // Results Count
-                      SliverToBoxAdapter(child: _buildResultsCount()),
-
-                      // Products Grid
-                      SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: _buildProductsGrid(),
-                      ),
-
-                      // Bottom spacing for the cart bar
-                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                    ],
+                        // Products Grid
+                        SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: _buildProductsGrid(productsRef),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -160,121 +144,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.surfaceContainerColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.outlineVariantColor, width: 1),
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
-          decoration: InputDecoration(
-            hintText: 'Search products...',
-            hintStyle: TextStyle(
-              color: context.onSurfaceColor.withValues(alpha: 0.5),
-              fontSize: 16,
-            ),
-            prefixIcon: Icon(
-              Icons.search,
-              color: context.onSurfaceColor.withValues(alpha: 0.5),
-            ),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: Icon(
-                      Icons.clear,
-                      color: context.onSurfaceColor.withValues(alpha: 0.5),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _searchController.clear();
-                        _searchQuery = '';
-                      });
-                    },
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-          ),
-          style: TextStyle(color: context.onSurfaceColor, fontSize: 16),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _filters.length,
-        itemBuilder: (context, index) {
-          final isSelected = _selectedFilterIndex == index;
-          final isFilterButton = index == 0;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(_filters[index]),
-                  if (isFilterButton) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 18,
-                      color: isSelected
-                          ? context.onPrimaryColor
-                          : context.onSurfaceColor,
-                    ),
-                  ],
-                ],
-              ),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedFilterIndex = selected ? index : -1;
-                });
-              },
-              backgroundColor: context.surfaceContainerColor,
-              selectedColor: context.zetrixRed600,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? context.onPrimaryColor
-                    : context.onSurfaceColor,
-                fontWeight: FontWeight.w500,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: isSelected
-                      ? context.zetrixRed600
-                      : context.outlineVariantColor,
-                ),
-              ),
-              showCheckmark: false,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   // Extract unique categories from products
-  // TODO : swtich to api call
+  // TODO : switch to api call
   List<CategoryItem> _buildCategoriesList() {
     final Set<String?> uniqueCategories =
         ref
@@ -341,8 +212,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 70,
-                        height: 70,
+                        width: 50,
+                        height: 50,
                         decoration: BoxDecoration(
                           color: isSelected
                               ? context.zetrixRed50
@@ -405,41 +276,142 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         .join(' ');
   }
 
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case "men's clothing":
+        return Icons.male;
+      case "women's clothing":
+        return Icons.female;
+      case 'jewelery':
+        return Icons.diamond;
+      case 'electronics':
+        return Icons.devices;
+      default:
+        return Icons.category;
+    }
+  }
+
+  // Filter products based on search query and category
+  List<Product> _getFilteredProducts(List<Product>? products) {
+    if (products == null) return [];
+
+    final searchState = ref.read(searchStateProvider);
+    var filtered = products;
+
+    if (searchState.selectedCategory != 'All') {
+      filtered = filtered
+          .where((p) => p.category == searchState.selectedCategory)
+          .toList();
+    }
+
+    if (searchState.query.isNotEmpty) {
+      final query = searchState.query.toLowerCase();
+      filtered = filtered.where((p) {
+        final title = p.title?.toLowerCase() ?? '';
+        final description = p.description?.toLowerCase() ?? '';
+        final category = p.category?.toLowerCase() ?? '';
+        return title.contains(query) ||
+            description.contains(query) ||
+            category.contains(query);
+      }).toList();
+    }
+
+    return filtered;
+  }
+
   Widget _buildResultsCount() {
+    final searchState = ref.watch(searchStateProvider);
     final productsRef = ref.watch(productListProvider);
+    final filteredProducts = _getFilteredProducts(productsRef.value);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '${productsRef.value?.length ?? 0} Products found',
-            style: TextStyle(
-              color: context.steelDark,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+          Text('${filteredProducts.length} Products found'),
+          if (searchState.query.isNotEmpty)
+            TextButton.icon(
+              onPressed: () {
+                ref.read(searchStateProvider.notifier).clearSearch();
+              },
+              icon: const Icon(Icons.clear, size: 16),
+              label: const Text('Clear search'),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildProductsGrid() {
-    final productsRef = ref.watch(productListProvider);
-    return productsRef.map(
+  Widget _buildProductsGrid(AsyncValue<List<Product>> products) {
+    return products.map(
       data: (data) {
-        return SliverGrid(
+        final filteredProducts = _getFilteredProducts(data.value);
+
+        if (filteredProducts.isEmpty) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: context.steelMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    _searchQuery.isNotEmpty
+                        ? 'No products found for "$_searchQuery"'
+                        : 'No products in this category',
+                    style: TextStyle(
+                      color: context.steelDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try adjusting your search or filters',
+                    style: TextStyle(color: context.steelMedium, fontSize: 14),
+                  ),
+                  const SizedBox(height: 24),
+                  if (_searchQuery.isNotEmpty || _selectedCategory != 'All')
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _searchQuery = '';
+                          _selectedCategory = 'All';
+                          _searchController.clear();
+                        });
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Reset Filters'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.zetrixRed600,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return SliverGrid.builder(
+          itemCount: filteredProducts.length,
+          itemBuilder: (context, index) {
+            final product = filteredProducts[index];
+            return _buildProductCard(product);
+          },
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             childAspectRatio: 0.7,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final product = data.value[index];
-            return _buildProductCard(product);
-          }, childCount: data.value.length),
         );
       },
       loading: (loading) {
@@ -461,10 +433,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       onTap: _fetchingCartItemCount
           ? null
           : () async {
+              setState(() {
+                _fetchingCartItemCount = true;
+              });
+
               final cartItemCount = await ref
                   .read(cartProvider.notifier)
                   .getCartItemCountByProductId(product.id ?? 0);
-              debugPrint('cartItemCount: $cartItemCount');
+
+              setState(() {
+                _fetchingCartItemCount = false;
+              });
+
               if (!mounted) return;
               context.push(
                 RouteConstant.productDetail,
@@ -667,5 +647,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
     );
+  }
+
+  double _calculateHeaderHeight(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth >= 768) {
+      return screenHeight * 0.12;
+    } else if (screenWidth >= 375) {
+      return screenHeight * 0.25;
+    } else {
+      return screenHeight * 0.30;
+    }
   }
 }
