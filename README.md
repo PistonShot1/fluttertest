@@ -10,8 +10,8 @@ A modern Flutter e-commerce application featuring product search, shopping cart,
 - To test for review refer to branch tags (v1.0.0 + 1, v1.0.1,....)
 - The requested pull request to be created already merged , you may refer to the closed PRs in this repository.
 - v1.0.0 : Covers instructions from 1-7
-- v1.0.1 : Covers additional instruction 1 & 2
-- v1.0.2 : (in development)
+- v1.0.1 : Covers additional instruction 1
+- v1.0.2 : Covers additional instruction 2 & 3(in development)
 
 ## Pending Features and Chores (in progress)
 
