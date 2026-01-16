@@ -104,29 +104,36 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   onRefresh: () async {
                     ref.invalidate(productListProvider);
                   },
-                  child: CustomScrollView(
-                    slivers: [
-                      // Search Bar
-                      // SliverToBoxAdapter(child: _buildSearchBar()),
+                  child: NestedScrollView(
+                    headerSliverBuilder: (context, innerBoxIsScrolled) {
+                      return [
+                        SliverAppBar(
+                          pinned: true,
+                          forceElevated: innerBoxIsScrolled,
+                          automaticallyImplyLeading: false,
+                          flexibleSpace: SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [_buildSearchBar(), _buildCategories()],
+                            ),
+                          ),
+                          expandedHeight: _calculateHeaderHeight(context),
+                          collapsedHeight: _calculateHeaderHeight(context),
+                        ),
+                      ];
+                    },
+                    body: CustomScrollView(
+                      slivers: [
+                        // Results Count
+                        SliverToBoxAdapter(child: _buildResultsCount()),
 
-                      // Filter Chips
-                      // SliverToBoxAdapter(child: _buildFilterChips()),
-
-                      // Categories
-                      // SliverToBoxAdapter(child: _buildCategories()),
-
-                      // Results Count
-                      SliverToBoxAdapter(child: _buildResultsCount()),
-
-                      // Products Grid
-                      SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: _buildProductsGrid(),
-                      ),
-
-                      // Bottom spacing for the cart bar
-                      const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                    ],
+                        // Products Grid
+                        SliverPadding(
+                          padding: const EdgeInsets.all(16),
+                          sliver: _buildProductsGrid(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -341,8 +348,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 70,
-                        height: 70,
+                        width: 50,
+                        height: 50,
                         decoration: BoxDecoration(
                           color: isSelected
                               ? context.zetrixRed50
@@ -429,17 +436,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final productsRef = ref.watch(productListProvider);
     return productsRef.map(
       data: (data) {
-        return SliverGrid(
+        return SliverGrid.builder(
+          itemCount: data.value.length,
+          itemBuilder: (context, index) {
+            final product = data.value[index];
+            return _buildProductCard(product);
+          },
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             childAspectRatio: 0.7,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final product = data.value[index];
-            return _buildProductCard(product);
-          }, childCount: data.value.length),
         );
       },
       loading: (loading) {
@@ -667,5 +675,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
     );
+  }
+
+  double _calculateHeaderHeight(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth >= 768) {
+      return screenHeight * 0.12;
+    } else if (screenWidth >= 414) {
+      return screenHeight * 0.22;
+    } else if (screenWidth >= 375) {
+      return screenHeight * 0.24;
+    } else {
+      return screenHeight * 0.30;
+    }
   }
 }
